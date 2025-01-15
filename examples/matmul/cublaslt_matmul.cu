@@ -1,5 +1,19 @@
 #include <cublasLt.h>
+#include <cuda_bf16.h>
+#include <cassert>
+#include <unistd.h>
+#include <cuda_runtime.h>
+typedef __nv_bfloat16 bf16;
+#define CEIL_DIV(M, N) (((M) + (N)-1) / (N))
 
+void cudaCheck(cudaError_t error, const char *file, int line) {
+  if (error != cudaSuccess) {
+    printf("[CUDA ERROR] at file %s:%d:\n%s\n", file, line,
+           cudaGetErrorString(error));
+    exit(1);
+  }
+}
+#define cudaCheck(err) (cudaCheck(err, __FILE__, __LINE__))
 // Random code snippets to use while development
 const size_t cublaslt_workspace_size = 32 * 1024 * 1024;
 void* cublaslt_workspace = NULL;
@@ -7,7 +21,7 @@ cublasLtHandle_t cublaslt_handle;
 
 void initCublasLt() {
     cublasLtCreate(&cublaslt_handle);
-    cudaCheck(cudaMalloc(&cublaslt_workspace, cublaslt_workspace_size));    
+    (cudaMalloc(&cublaslt_workspace, cublaslt_workspace_size));    
 }
 
 void runCublasMatmulBF16(int M, int N, int K, bf16 *A, bf16 *B, bf16 *C) {
@@ -41,8 +55,7 @@ void runCublasMatmulBF16(int M, int N, int K, bf16 *A, bf16 *B, bf16 *C) {
   
       // create a preference handle with specified max workspace
       cublasLtMatmulPreferenceCreate(&preference);
-      cublasLtMatmulPreferenceSetAttribute(preference, CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTE,
-                                                       &cublaslt_workspace_size, sizeof(cublaslt_workspace_size)));
+      cublasLtMatmulPreferenceSetAttribute(preference, CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTES, &cublaslt_workspace_size, sizeof(cublaslt_workspace_size));
   
       // set scale type to FP32 (needs to be FP16 if and only if using CUBLAS_COMPUTE_16F, so it's FP32 even for FP8!)
       cublasDataType_t scale_type = CUDA_R_32F;
@@ -60,9 +73,9 @@ void runCublasMatmulBF16(int M, int N, int K, bf16 *A, bf16 *B, bf16 *C) {
       float alpha = 1, beta = 0;
   
       // call the matmul
-      cublasLtMatmul(cublaslt_handle, operationDes,
+      cublasLtMatmul(cublaslt_handle, operationDesc,
                                  &alpha, A, ALayout, B, BLayout, &beta, C, CLayout, C, CLayout,
-                                 &heuristic.algo, cublaslt_workspace, cublaslt_workspace_size, 0));
+                                 &heuristic.algo, cublaslt_workspace, cublaslt_workspace_size, 0);
   
       // cleanups
       cublasLtMatmulPreferenceDestroy(preference);
@@ -70,5 +83,5 @@ void runCublasMatmulBF16(int M, int N, int K, bf16 *A, bf16 *B, bf16 *C) {
       cublasLtMatrixLayoutDestroy(ALayout);
       cublasLtMatrixLayoutDestroy(BLayout);
       cublasLtMatrixLayoutDestroy(CLayout);
-      cudaCheck(cudaGetLastError());
+      (cudaGetLastError());
   }

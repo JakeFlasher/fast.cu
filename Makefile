@@ -7,11 +7,10 @@
 # --------------------- Basic Compiler Settings ---------------------
 # You can adjust these paths and flags as needed.
 NVCC_FLAGS      = -std=c++17 -O3 -DNDEBUG -w
-NVCC_LDFLAGS    = -lcublas -lcuda
+NVCC_LDFLAGS    = -lcublas -lcuda -lcublasLt -lcudadevrt -lcudart_static
 NVCC_INCLUDES   = -I/usr/local/cuda-12.6/include
 NVCC_LDLIBS     =
-OUT_DIR         = bin 
-
+OUT_DIR = out
 # Example: detect the first GPU’s compute capability removing any dot, e.g. "90" → "90a".
 # If you want to override this, comment or adjust.
 GPU_COMPUTE_CAPABILITY = $(shell nvidia-smi --query-gpu=compute_cap --format=csv,noheader | sed 's/\.//g' | sort -n | head -n 1)
@@ -79,7 +78,7 @@ cublaslt_matmulprofile: cublaslt_matmul
 # ------------------- "all" Target -------------------
 # "make all" compiles all three binaries and then profiles them, 
 # and finally calls the profile.sh script to generate CSVs in the same run.
-all: sum matmul cublaslt_matmul sumprofile matmulprofile cublaslt_matmulprofile analyze
+all: sum matmul sumprofile matmulprofile analyze
 
 # Optionally run the shell script (profile.sh) after all ncu-rep files are generated
 analyze:
