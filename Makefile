@@ -10,7 +10,7 @@ NVCC_FLAGS      = -std=c++17 -O3 -DNDEBUG -w
 NVCC_LDFLAGS    = -lcublas -lcuda
 NVCC_INCLUDES   = -I/usr/local/cuda-12.6/include
 NVCC_LDLIBS     =
-OUT_DIR         = out
+OUT_DIR         = bin 
 
 # Example: detect the first GPU’s compute capability removing any dot, e.g. "90" → "90a".
 # If you want to override this, comment or adjust.
